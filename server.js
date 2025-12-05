@@ -1,4 +1,3 @@
-// server.js - Para Node.js/Express o Vercel Serverless
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -12,10 +11,14 @@ const gameInstances = new Map();
 const MAX_STORED_INSTANCES = 100;
 const INSTANCE_TTL = 3600000; // 1 hora en ms
 
+// **NUEVO VALOR MINIMO**
+const MIN_VALUE_THRESHOLD = 1000000; // 1M
+
 // Limpiar instancias antiguas
 setInterval(() => {
   const now = Date.now();
   for (const [key, data] of gameInstances.entries()) {
+    // Convierte el timestamp de segundos (Roblox) a milisegundos para la comparación
     if (now - data.timestamp * 1000 > INSTANCE_TTL) {
       gameInstances.delete(key);
     }
@@ -35,8 +38,8 @@ app.post('/api/report', (req, res) => {
       });
     }
 
-    // Validar que el valor sea mayor a 3M
-    if (animalData.value < 1000000) {
+    // **ACTUALIZACIÓN 1:** Validar que el valor sea mayor o igual a 1M
+    if (animalData.value < MIN_VALUE_THRESHOLD) {
       return res.status(200).json({ 
         success: true, 
         message: 'Value too low, not stored' 
@@ -64,6 +67,7 @@ app.post('/api/report', (req, res) => {
 
     // Limitar tamaño del Map
     if (gameInstances.size > MAX_STORED_INSTANCES) {
+      // Eliminar el más antiguo (el primero en ser insertado, asumiendo que Map mantiene el orden)
       const firstKey = gameInstances.keys().next().value;
       gameInstances.delete(firstKey);
     }
@@ -88,7 +92,8 @@ app.post('/api/report', (req, res) => {
 // GET - Obtener todas las instancias activas (para el auto-joiner)
 app.get('/api/instances', (req, res) => {
   try {
-    const minValue = parseInt(req.query.minValue) || 1000000;
+    // **ACTUALIZACIÓN 2:** Establecer el valor por defecto de filtro a 1M
+    const minValue = parseInt(req.query.minValue) || MIN_VALUE_THRESHOLD; 
     const limit = parseInt(req.query.limit) || 50;
 
     // Convertir Map a array y filtrar
@@ -185,11 +190,12 @@ app.delete('/api/instance/:gameInstanceId', (req, res) => {
     const { gameInstanceId } = req.params;
     let deleted = false;
 
+    // Iterar sobre el Map para encontrar y eliminar la instancia
     for (const [key, instance] of gameInstances.entries()) {
       if (instance.gameInstanceId === gameInstanceId) {
         gameInstances.delete(key);
         deleted = true;
-        break;
+        break; // Asumimos que GameInstanceId es único o queremos eliminar solo la primera coincidencia
       }
     }
 
