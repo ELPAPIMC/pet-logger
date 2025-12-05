@@ -1,5 +1,18 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "source": "/feedback/((?!general).*)",
-  "destination": "/api/feedback/general"
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
