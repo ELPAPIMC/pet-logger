@@ -36,7 +36,7 @@ app.post('/api/report', (req, res) => {
     }
 
     // Validar que el valor sea mayor a 3M
-    if (animalData.value < 3000000) {
+    if (animalData.value < 1000000) {
       return res.status(200).json({ 
         success: true, 
         message: 'Value too low, not stored' 
@@ -88,7 +88,7 @@ app.post('/api/report', (req, res) => {
 // GET - Obtener todas las instancias activas (para el auto-joiner)
 app.get('/api/instances', (req, res) => {
   try {
-    const minValue = parseInt(req.query.minValue) || 3000000;
+    const minValue = parseInt(req.query.minValue) || 1000000;
     const limit = parseInt(req.query.limit) || 50;
 
     // Convertir Map a array y filtrar
